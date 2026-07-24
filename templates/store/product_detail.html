@@ -101,7 +101,7 @@
                 <div class="col-md-9">
 
 
-                    <form action="" method="POST">
+                    <form action="{% url 'submit_review' single_product.id %}" method="POST">
                         {% csrf_token %}
                         <h5>Write Your Review</h5>
 
@@ -159,6 +159,7 @@
                             </div>
 
                         </div>
+                        {% include 'includes/alerts.html' %}
                     </form>
                     <br>
                     <header class="section-heading">
