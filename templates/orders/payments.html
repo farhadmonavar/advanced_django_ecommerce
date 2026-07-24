@@ -112,9 +112,11 @@
                             </p>
 
 
-                            <div id="paypal-button-container">
-                                <!-- PayPal Button Will Load -->
-                            </div>
+                            <button id="demo-pay-btn" class="btn btn-primary btn-block">
+                                <i class="fab fa-paypal"></i> Pay with PayPal (Demo)
+                            </button>
+
+                            <div id="payment-message" class="mt-3"></div>
 
                         </div> <!-- card-body.// -->
                     </div> <!-- card.// -->
@@ -155,59 +157,53 @@
         var csrftoken = getCookie('csrftoken');
         var orderID = "{{order.order_number}}"
         var payment_method = 'PayPal'
-        var redirect_url = "{% url 'order_complete' %}"
+        var redirect_url = ""
         // Render the PayPal button into #paypal-button-container
-        paypal.Buttons({
 
-            style: {
-                color: 'blue',
-                shape: 'rect',
-                label: 'pay',
-                height: 40
-            },
+        document.getElementById("demo-pay-btn").addEventListener("click", function () {
 
-            // Set up the transaction
-            createOrder: function (data, actions) {
-                return actions.order.create({
-                    purchase_units: [{
-                        amount: {
-                            value: amount,
-                        }
-                    }]
-                });
-            },
+            const button = this;
+            const message = document.getElementById("payment-message");
 
-            // Finalize the transaction
-            onApprove: function (data, actions) {
-                return actions.order.capture().then(function (details) {
-                    // Show a success message to the buyer
-                    console.log(details);
-                    sendData();
+            button.disabled = true;
+            button.innerHTML = "Processing Payment...";
 
-                    function sendData() {
-                        fetch(url, {
-                            method: "POST",
-                            headers: {
-                                "Content-type": "application/json",
-                                "X-CSRFToken": csrftoken,
-                            },
-                            body: JSON.stringify({
-                                orderID: orderID,
-                                transID: details.id,
-                                payment_method: payment_method,
-                                status: details.status,
-                            }),
-                        })
-                            .then((response) => response.json())
-                            .then((data) => {
-                                window.location.href = redirect_url + '?order_number=' + data.order_number + '&payment_id=' + data.transID;
-                            });
-                    }
-                });
-            }
+            setTimeout(function () {
 
+                message.innerHTML = `
+            <div class="alert alert-success">
+                <strong>Demo Payment Successful!</strong><br>
+                No real PayPal transaction was processed.
+            </div>
+        `;
 
-        }).render('#paypal-button-container');
+                fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrftoken,
+                    },
+                    body: JSON.stringify({
+                        orderID: orderID,
+                        transID: "DEMO-" + Date.now(),
+                        payment_method: payment_method,
+                        status: "COMPLETED",
+                    }),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        window.location.href =
+                            redirect_url +
+                            "?order_number=" +
+                            data.order_number +
+                            "&payment_id=" +
+                            data.transID;
+                    });
+
+            }, 2000);
+
+        });
+
     </script>
 
 {% endblock %}
